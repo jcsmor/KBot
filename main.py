@@ -1,7 +1,10 @@
-import tkinter as tk
 import logging
 
+from myconfig import *
 from connectors.binance_futures import BinanceFuturesClient
+
+from interface.root_component import Root
+
 
 logger = logging.getLogger()
 
@@ -19,16 +22,10 @@ file_handler.setLevel(logging.DEBUG)
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
-logger.debug("This message is important only when debugging the program")
-logger.info("This message just shows basic information")
-logger.warning("This message is about something you should pay attention to")
-logger.error("This message helps to debug and error that occurred in your program")
 
-logger.info("This is logged in all cases")
-# write_log()
 if __name__ == '__main__':
 
-    binance = BinanceFuturesClient(False)
+    binance = BinanceFuturesClient(pKeyTN, sKeyTN, True)
 
-    root = tk.Tk()
+    root = Root(binance)
     root.mainloop()
