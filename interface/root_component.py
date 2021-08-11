@@ -11,7 +11,6 @@ from interface.watchlist_component import Watchlist
 from interface.trades_component import TradesWatch
 from interface.strategy_component import StrategyEditor
 
-
 logger = logging.getLogger()  # This will be the same logger object as the one configured in main.py
 
 
@@ -21,7 +20,7 @@ class Root(tk.Tk):
 
         self.binance = binance
 
-        self.title("Trading Bot")
+        self.title("KBot")
         self.protocol("WM_DELETE_WINDOW", self._ask_before_close)
 
         self.configure(bg=BG_COLOR)
@@ -71,9 +70,7 @@ class Root(tk.Tk):
         result = askquestion("Confirmation", "Do you really want to exit the application?")
         if result == "yes":
             self.binance.reconnect = False  # Avoids the infinite reconnect loop in _start_ws()
-            self.bitmex.reconnect = False
             self.binance.ws.close()
-            self.bitmex.ws.close()
 
             self.destroy()  # Destroys the UI and terminates the program as no other thread is running
 
@@ -88,11 +85,6 @@ class Root(tk.Tk):
 
         # Logs
 
-        for log in self.bitmex.logs:
-            if not log['displayed']:
-                self.logging_frame.add_log(log['log'])
-                log['displayed'] = True
-
         for log in self.binance.logs:
             if not log['displayed']:
                 self.logging_frame.add_log(log['log'])
@@ -100,7 +92,7 @@ class Root(tk.Tk):
 
         # Trades and Logs
 
-        for client in [self.binance, self.bitmex]:
+        for client in [self.binance]:
 
             try:  # try...except statement to handle the case when a dictionary is updated during the following loops
 
@@ -119,7 +111,7 @@ class Root(tk.Tk):
                         if "binance" in trade.contract.exchange:
                             precision = trade.contract.price_decimals
                         else:
-                            precision = 8  # The Bitmex PNL is always is BTC, thus 8 decimals
+                            precision = 8  # The 8 decimals
 
                         pnl_str = "{0:.{prec}f}".format(trade.pnl, prec=precision)
                         self._trades_frame.body_widgets['pnl_var'][trade.time].set(pnl_str)
@@ -151,17 +143,6 @@ class Root(tk.Tk):
                     precision = self.binance.contracts[symbol].price_decimals
 
                     prices = self.binance.prices[symbol]
-
-                elif exchange == "Bitmex":
-                    if symbol not in self.bitmex.contracts:
-                        continue
-
-                    if symbol not in self.bitmex.prices:
-                        continue
-
-                    precision = self.bitmex.contracts[symbol].price_decimals
-
-                    prices = self.bitmex.prices[symbol]
 
                 else:
                     continue
@@ -205,7 +186,8 @@ class Root(tk.Tk):
 
         strat_widgets = self._strategy_frame.body_widgets
 
-        for b_index in strat_widgets['contract']:  # Loops through the rows of a column (not necessarily the 'contract' one
+        for b_index in strat_widgets[
+            'contract']:  # Loops through the rows of a column (not necessarily the 'contract' one
 
             strategy_type = strat_widgets['strategy_type_var'][b_index].get()
             contract = strat_widgets['contract_var'][b_index].get()
@@ -229,28 +211,3 @@ class Root(tk.Tk):
         self._strategy_frame.db.save("strategies", strategies)
 
         self.logging_frame.add_log("Workspace saved")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

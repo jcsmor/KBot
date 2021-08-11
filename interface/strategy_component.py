@@ -8,7 +8,6 @@ from interface.styling import *
 from interface.scrollable_frame import ScrollableFrame
 
 from connectors.binance import BinanceClient
-from connectors.bitmex import BitmexClient
 
 from strategies import TechnicalStrategy, BreakoutStrategy
 from utils import *
