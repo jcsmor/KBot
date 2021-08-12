@@ -14,7 +14,6 @@ from utils import *
 
 from database import WorkspaceData
 
-
 if typing.TYPE_CHECKING:
     from interface.root_component import Root
 
@@ -142,14 +141,18 @@ class StrategyEditor(tk.Frame):
                                                                  font=GLOBAL_FONT, bd=1, width=base_param['width'])
 
                 if base_param['data_type'] == int:
-                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_integer, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key',
+                                                                 validatecommand=(self._valid_integer, "%P"))
                 elif base_param['data_type'] == float:
-                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_float, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key',
+                                                                 validatecommand=(self._valid_float, "%P"))
 
             elif base_param['widget'] == tk.Button:
                 self.body_widgets[code_name][b_index] = tk.Button(self._body_frame.sub_frame, text=base_param['text'],
-                                        bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT, width=base_param['width'],
-                                        command=lambda frozen_command=base_param['command']: frozen_command(b_index))
+                                                                  bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT,
+                                                                  width=base_param['width'],
+                                                                  command=lambda frozen_command=base_param[
+                                                                      'command']: frozen_command(b_index))
             else:
                 continue
 
@@ -209,7 +212,8 @@ class StrategyEditor(tk.Frame):
             temp_label.grid(row=row_nb, column=0)
 
             if param['widget'] == tk.Entry:
-                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER, fg=FG_COLOR,
+                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER,
+                                                        fg=FG_COLOR,
                                                         insertbackground=FG_COLOR, highlightthickness=False)
 
                 # Sets the data validation function based on the data_type chosen
@@ -358,6 +362,3 @@ class StrategyEditor(tk.Frame):
             for param, value in extra_params.items():
                 if value is not None:
                     self.additional_parameters[b_index][param] = value
-
-
-
