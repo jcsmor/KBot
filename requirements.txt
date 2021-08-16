@@ -1,0 +1,4 @@
+pandas==1.2.4
+requests==2.25.1
+tkmacosx==1.0.3
+websocket_client==1.2.1
