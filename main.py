@@ -30,5 +30,8 @@ if __name__ == '__main__':  # Execute the following code only when executing mai
     binance = BinanceClient(pKeyTN, sKeyTN,
                             testnet=True, futures=True)
 
+    # binance = BinanceClient(pKey, sKey,
+    #                         testnet=False, futures=True)
+
     root = Root(binance)
     root.mainloop()
