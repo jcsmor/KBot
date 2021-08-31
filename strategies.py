@@ -1,4 +1,5 @@
 import logging
+import pprint
 from typing import *
 import time
 
@@ -183,7 +184,8 @@ class Strategy:
 
             new_trade = Trade({"time": int(time.time() * 1000), "entry_price": avg_fill_price,
                                "contract": self.contract, "strategy": self.strat_name, "side": position_side,
-                               "status": "open", "pnl": 0, "quantity": order_status.executed_qty, "entry_id": order_status.order_id})
+                               "status": "open", "pnl": 0, "quantity": order_status.executed_qty,
+                               "entry_id": order_status.order_id})
             self.trades.append(new_trade)
 
     def _check_tp_sl(self, trade: Trade):
@@ -238,7 +240,8 @@ class Strategy:
 
 
 class TechnicalStrategy(Strategy):
-    def __init__(self, client, contract: Contract, exchange: str, timeframe: str, balance_pct: float, take_profit: float,
+    def __init__(self, client, contract: Contract, exchange: str, timeframe: str, balance_pct: float,
+                 take_profit: float,
                  stop_loss: float, other_params: Dict):
         super().__init__(client, contract, exchange, timeframe, balance_pct, take_profit, stop_loss, "Technical")
 
@@ -310,6 +313,14 @@ class TechnicalStrategy(Strategy):
         macd_line, macd_signal = self._macd()
         rsi = self._rsi()
 
+        ### Adding this to get debug info ###
+        current_balances = self.client.get_balances()
+        self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
+        self._add_log(f"Macd line:  {macd_line}")
+        self._add_log(f"Macd signal:  {macd_signal}")
+        self._add_log(f"RSI:  {rsi}")
+        #####################################
+
         if rsi < 30 and macd_line > macd_signal:
             return 1
         elif rsi > 70 and macd_line < macd_signal:
@@ -334,7 +345,8 @@ class TechnicalStrategy(Strategy):
 
 
 class BreakoutStrategy(Strategy):
-    def __init__(self, client, contract: Contract, exchange: str, timeframe: str, balance_pct: float, take_profit: float,
+    def __init__(self, client, contract: Contract, exchange: str, timeframe: str, balance_pct: float,
+                 take_profit: float,
                  stop_loss: float, other_params: Dict):
         super().__init__(client, contract, exchange, timeframe, balance_pct, take_profit, stop_loss, "Breakout")
 
@@ -367,14 +379,3 @@ class BreakoutStrategy(Strategy):
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
-
-
-
-
-
-
-
-
-
-
-

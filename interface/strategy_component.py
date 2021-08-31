@@ -14,6 +14,7 @@ from utils import *
 
 from database import WorkspaceData
 
+
 if typing.TYPE_CHECKING:
     from interface.root_component import Root
 
@@ -61,22 +62,21 @@ class StrategyEditor(tk.Frame):
         # The width may need to be adjusted depending on your screen size and resolution
         self._base_params = [
             {"code_name": "strategy_type", "widget": tk.OptionMenu, "data_type": str,
-             "values": ["Technical", "Breakout"], "width": 6, "header": "Strategy"},
+             "values": ["Technical", "Breakout"], "width": 9, "header": "Strategy"},
             {"code_name": "contract", "widget": tk.OptionMenu, "data_type": str, "values": self._all_contracts,
-             "width": 7, "header": "    Contract"},
+             "width": 7, "header": "Contract"},
             {"code_name": "timeframe", "widget": tk.OptionMenu, "data_type": str, "values": self._all_timeframes,
-             "width": 12, "header": "           Timeframe"},
-            {"code_name": "balance_pct", "widget": tk.Entry, "data_type": float, "width": 16,
-             "header": "                   Balance %"},
-            {"code_name": "take_profit", "widget": tk.Entry, "data_type": float, "width": 11,
-             "header": "               TP %"},
-            {"code_name": "stop_loss", "widget": tk.Entry, "data_type": float, "width": 11, "header": "     SL %"},
+             "width": 8, "header": "Timeframe"},
+            {"code_name": "balance_pct", "widget": tk.Entry, "data_type": float, "width": 10, "header": "Balance %"},
+            {"code_name": "take_profit", "widget": tk.Entry, "data_type": float, "width": 7, "header": "TP %"},
+            {"code_name": "stop_loss", "widget": tk.Entry, "data_type": float, "width": 7, "header": "SL %"},
             {"code_name": "parameters", "widget": tk.Button, "data_type": float, "text": "Parameters",
              "bg": BG_COLOR_2, "command": self._show_popup, "header": "", "width": 10},
             {"code_name": "activation", "widget": tk.Button, "data_type": float, "text": "OFF",
-             "bg": "darkred", "command": self._switch_strategy, "header": "", "width": 8},
+             "bg": "darkred", "command": self._switch_strategy, "header": "", "width" : 8},
             {"code_name": "delete", "widget": tk.Button, "data_type": float, "text": "X",
-             "bg": "darkred", "command": self._delete_row, "header": "", "width": 6}
+             "bg": "darkred", "command": self._delete_row, "header": "", "width": 6},
+
         ]
 
         self.extra_params = {
@@ -94,16 +94,16 @@ class StrategyEditor(tk.Frame):
         for idx, h in enumerate(self._base_params):
             header = tk.Label(self._headers_frame, text=h['header'], bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                               width=h['width'], bd=1, relief=tk.FLAT)
-            header.grid(row=0, column=idx, padx=12)
+            header.grid(row=0, column=idx, padx=2)
 
         header = tk.Label(self._headers_frame, text="", bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                           width=8, bd=1, relief=tk.FLAT)
-        header.grid(row=0, column=len(self._base_params), padx=12)
+        header.grid(row=0, column=len(self._base_params), padx=2)
 
         self._headers_frame.pack(side=tk.TOP, anchor="nw")
 
         self._body_frame = ScrollableFrame(self._table_frame, bg=BG_COLOR, height=250)
-        self._body_frame.pack(side=tk.TOP, fill=tk.X, anchor="nw")
+        self._body_frame.pack(side=tk.TOP, fill=tk.X, anchor="nw", padx=10)
 
         for h in self._base_params:
             self.body_widgets[h['code_name']] = dict()
@@ -143,18 +143,14 @@ class StrategyEditor(tk.Frame):
                                                                  font=GLOBAL_FONT, bd=1, width=base_param['width'])
 
                 if base_param['data_type'] == int:
-                    self.body_widgets[code_name][b_index].config(validate='key',
-                                                                 validatecommand=(self._valid_integer, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_integer, "%P"))
                 elif base_param['data_type'] == float:
-                    self.body_widgets[code_name][b_index].config(validate='key',
-                                                                 validatecommand=(self._valid_float, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_float, "%P"))
 
             elif base_param['widget'] == tk.Button:
                 self.body_widgets[code_name][b_index] = tk.Button(self._body_frame.sub_frame, text=base_param['text'],
-                                                                  bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT,
-                                                                  width=base_param['width'],
-                                                                  command=lambda frozen_command=base_param[
-                                                                      'command']: frozen_command(b_index))
+                                        bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT, width=base_param['width'],
+                                        command=lambda frozen_command=base_param['command']: frozen_command(b_index))
             else:
                 continue
 
@@ -214,8 +210,7 @@ class StrategyEditor(tk.Frame):
             temp_label.grid(row=row_nb, column=0)
 
             if param['widget'] == tk.Entry:
-                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER,
-                                                        fg=FG_COLOR,
+                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER, fg=FG_COLOR,
                                                         insertbackground=FG_COLOR, highlightthickness=False)
 
                 # Sets the data validation function based on the data_type chosen
@@ -364,3 +359,6 @@ class StrategyEditor(tk.Frame):
             for param, value in extra_params.items():
                 if value is not None:
                     self.additional_parameters[b_index][param] = value
+
+
+

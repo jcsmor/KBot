@@ -1,4 +1,6 @@
 import logging
+import pprint
+
 import requests
 import time
 import typing
@@ -17,7 +19,6 @@ import threading
 from models import *
 
 from strategies import TechnicalStrategy, BreakoutStrategy
-
 
 logger = logging.getLogger()
 
@@ -236,9 +237,12 @@ class BinanceClient:
                 for a in account_data['balances']:
                     balances[a['asset']] = Balance(a, self.platform)
 
+        # print(balances['USDT'].wallet_balance)
+
         return balances
 
-    def place_order(self, contract: Contract, order_type: str, quantity: float, side: str, price=None, tif=None) -> OrderStatus:
+    def place_order(self, contract: Contract, order_type: str, quantity: float, side: str, price=None,
+                    tif=None) -> OrderStatus:
 
         """
         Place an order. Based on the order_type, the price and tif arguments are not required
@@ -539,12 +543,3 @@ class BinanceClient:
         logger.info("Binance current %s balance = %s, trade size = %s", contract.quote_asset, balance, trade_size)
 
         return trade_size
-
-
-
-
-
-
-
-
-
