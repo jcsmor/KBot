@@ -60,6 +60,7 @@ class StrategyEditor(tk.Frame):
         # Defines the widgets displayed on each row and some characteristics of these widgets like their width
         # This lets the program create the widgets dynamically and it takes less space in the code
         # The width may need to be adjusted depending on your screen size and resolution
+
         self._base_params = [
             {"code_name": "strategy_type", "widget": tk.OptionMenu, "data_type": str,
              "values": ["Technical", "Breakout"], "width": 9, "header": "Strategy"},
@@ -94,7 +95,10 @@ class StrategyEditor(tk.Frame):
         for idx, h in enumerate(self._base_params):
             header = tk.Label(self._headers_frame, text=h['header'], bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                               width=h['width'], bd=1, relief=tk.FLAT)
-            header.grid(row=0, column=idx, padx=2)
+            #for my WINDOWS have this
+            #header.grid(row=0, column=idx, padx=2)
+            #for my MAC have this
+            header.grid(row=0, column=idx, padx=18)
 
         header = tk.Label(self._headers_frame, text="", bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                           width=8, bd=1, relief=tk.FLAT)
