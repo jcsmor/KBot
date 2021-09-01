@@ -151,6 +151,9 @@ class Root(tk.Tk):
                     price_str = "{0:.{prec}f}".format(prices['bid'], prec=precision)
                     self._watchlist_frame.body_widgets['bid_var'][key].set(price_str)
                 if prices['ask'] is not None:
+                    # Adding to send updated prices to strategies
+                    self.current_ask_price = prices['ask']
+
                     price_str = "{0:.{prec}f}".format(prices['ask'], prec=precision)
                     self._watchlist_frame.body_widgets['ask_var'][key].set(price_str)
 

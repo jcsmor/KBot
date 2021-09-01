@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
     root = Root(binance)
     root.mainloop()
+#self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
 # binance = BinanceFuturesClient(pKey, sKey, False)
 # print(binance.get_bid_ask("BTCUSDT"))
 # print(binance.get_historical_candles("BTCUSDT", "15m"))

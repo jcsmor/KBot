@@ -6,7 +6,7 @@ import time
 from threading import Timer
 
 import pandas as pd
-
+from numpy import sign
 from models import *
 
 if TYPE_CHECKING:  # Import the connector class names only for typing purpose (the classes aren't actually imported)
@@ -302,6 +302,103 @@ class TechnicalStrategy(Strategy):
 
         return macd_line.iloc[-2], macd_signal.iloc[-2]
 
+    def _emas(self) -> Tuple[float, float]:
+
+        """
+        Compute the EMAS and its Signal line.
+        :return: The EMAs and the EMA Signal value of the previous candlestick
+        """
+
+        close_list = []
+        for candle in self.candles:
+            close_list.append(candle.close)  # Use only the close price of each candlestick for the calculations
+
+        closes = pd.Series(close_list)  # Converts the close prices list to a pandas Series.
+
+        ema_fast = closes.ewm(span=self._ema_fast).mean()  # Exponential Moving Average method
+        ema_slow = closes.ewm(span=self._ema_slow).mean()
+
+        # IF EMA fast is > 0 then fast is great than slow and is bullish
+        # IF EMA fast is < 0 then fast is lower than slow and is bearish
+        # Also used to test crossover, we can see if signal changed from previous candle with .sign
+
+        ema_signal = ema_fast - ema_slow
+        return ema_signal.iloc[-2], ema_signal.iloc[-3]
+
+    def _current_ema_fast(self) -> float:
+
+        """
+        Compute the EMAS and its Signal line.
+        :return: The EMAs and the EMA Signal value of the previous candlestick
+        """
+
+        close_list = []
+        for candle in self.candles:
+            close_list.append(candle.close)  # Use only the close price of each candlestick for the calculations
+
+        closes = pd.Series(close_list)  # Converts the close prices list to a pandas Series.
+
+        ema_fast = closes.ewm(span=self._ema_fast).mean()  # Exponential Moving Average method
+
+        return ema_fast.iloc[-1]
+
+    def _check_crossover(self) -> int:
+
+        """
+        Compute technical indicators and compare their value to some predefined levels to know whether to go Long,
+        Short, or do nothing.
+        :return: 1 for a Long signal, -1 for a Short signal, 0 for no signal
+        """
+
+        ema_signal_latest, ema_signal_previous = self._emas()
+
+        # self._add_log(f"ema_signal_latest:  {ema_signal_latest}")
+        # self._add_log(f"ema_signal_previous:  {ema_signal_previous}")
+
+        if sign(ema_signal_latest) == 0:
+            # Same sign meaning it did not had a crossover and exactly same values, this should be rare
+            return 0
+        elif sign(ema_signal_latest) == sign(ema_signal_previous):
+            # Same sign meaning it did not had a crossover
+            return 0
+        elif sign(ema_signal_latest) != sign(ema_signal_previous):
+            # Different sign meaning had a crossover, return 1 or -1 depending os positive or negative sign
+            # if negative means is bearish, if positive is bullish
+            return sign(ema_signal_latest)
+
+    def _price_compare(self, c_result, timeout):
+        try:
+            self._add_log(f"timeout:  {timeout}")
+            current_ema_fast = self._current_ema_fast()
+            self._add_log(f"current_ema_fast:  {current_ema_fast}")
+            current_price = self.candles[-1].close
+            self._add_log(f"current_price:  {current_price}")
+
+            if c_result == 1:
+                # Bullish scenario price <= ema_fast active while until start next candle
+                while timeout > 1000:
+                    timeout = timeout - 1000
+                    time.sleep(1000)
+                    if current_price <= current_ema_fast:
+                        return 1
+                    else:
+                        self._price_compare(c_result, timeout)
+
+            elif c_result == -1:
+                # Bearish scenario price >= ema_fast
+                while timeout > 1000:
+                    timeout = timeout - 1000
+                    time.sleep(1000)
+                    if current_price >= current_ema_fast:
+                        return -1
+                    else:
+                        self._price_compare(c_result, timeout)
+
+            else:
+                return 0
+        except RuntimeError:
+            pass
+
     def _check_signal(self):
 
         """
@@ -310,23 +407,32 @@ class TechnicalStrategy(Strategy):
         :return: 1 for a Long signal, -1 for a Short signal, 0 for no signal
         """
 
-        macd_line, macd_signal = self._macd()
-        rsi = self._rsi()
+        # Checks for a EMA cross over
+        crossover = self._check_crossover()
+
+        # to comment
+        result = self._price_compare(1, self.tf_equiv)
 
         ### Adding this to get debug info ###
         current_balances = self.client.get_balances()
+        self._add_log(f"Crossover:  {crossover}")
         self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
-        self._add_log(f"Macd line:  {macd_line}")
-        self._add_log(f"Macd signal:  {macd_signal}")
-        self._add_log(f"RSI:  {rsi}")
         #####################################
 
-        if rsi < 30 and macd_line > macd_signal:
-            return 1
-        elif rsi > 70 and macd_line < macd_signal:
-            return -1
+        # if we are inside a short or long, in case of cross we need to market sell previous order, or Stop Loss
+        if crossover == 1 or crossover == -1:
+            if crossover == 1:
+                self._add_log("Is bullish need to buy at price <= ema_fast")
+            elif crossover == -1:
+                self._add_log("Is bearish need to buy at price >= ema_fast")
+
+            result = self._price_compare(crossover, self.tf_equiv)
+            self._add_log(f"We finaly have a result: {result}")
+            return result
         else:
             return 0
+
+        # create logic to enter in trade
 
     def check_trade(self, tick_type: str):
 

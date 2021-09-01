@@ -83,9 +83,9 @@ class StrategyEditor(tk.Frame):
         self.extra_params = {
             "Technical": [
                 {"code_name": "rsi_length", "name": "RSI Periods", "widget": tk.Entry, "data_type": int},
-                {"code_name": "ema_fast", "name": "MACD Fast Length", "widget": tk.Entry, "data_type": int},
-                {"code_name": "ema_slow", "name": "MACD Slow Length", "widget": tk.Entry, "data_type": int},
-                {"code_name": "ema_signal", "name": "MACD Signal Length", "widget": tk.Entry, "data_type": int},
+                {"code_name": "ema_fast", "name": "EMA 1", "widget": tk.Entry, "data_type": int},
+                {"code_name": "ema_slow", "name": "EMA 2", "widget": tk.Entry, "data_type": int},
+                {"code_name": "ema_signal", "name": "EMA 3", "widget": tk.Entry, "data_type": int},
             ],
             "Breakout": [
                 {"code_name": "min_volume", "name": "Minimum Volume", "widget": tk.Entry, "data_type": float},
