@@ -170,7 +170,7 @@ class BinanceClient:
         data = dict()
         data['symbol'] = contract.symbol
         data['interval'] = interval
-        data['limit'] = 1000  # The maximum number of candles is 1000 on Binance Spot
+        data['limit'] = 500  # The maximum number of candles is 1000 on Binance Spot
 
         if self.futures:
             raw_candles = self._make_request("GET", "/fapi/v1/klines", data)

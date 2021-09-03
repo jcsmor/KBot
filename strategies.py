@@ -39,6 +39,7 @@ class Strategy:
         self.candles: List[Candle] = []
         self.trades: List[Trade] = []
         self.logs = []
+        self.cross_over_confirmed = False
 
     def _add_log(self, msg: str):
         logger.info("%s", msg)
@@ -73,6 +74,7 @@ class Strategy:
             elif price < last_candle.low:
                 last_candle.low = price
 
+            # print("Price: " + str(price))
             # Check Take profit / Stop loss
 
             for trade in self.trades:
@@ -307,6 +309,9 @@ class TechnicalStrategy(Strategy):
         """
         Compute the EMAS and its Signal line.
         :return: The EMAs and the EMA Signal value of the previous candlestick
+        IF EMA fast is > 0 then fast is great than slow and is bullish
+        IF EMA fast is < 0 then fast is lower than slow and is bearish
+        Also used to test crossover, we can see if signal changed from previous candle with .sign
         """
 
         close_list = []
@@ -317,10 +322,6 @@ class TechnicalStrategy(Strategy):
 
         ema_fast = closes.ewm(span=self._ema_fast).mean()  # Exponential Moving Average method
         ema_slow = closes.ewm(span=self._ema_slow).mean()
-
-        # IF EMA fast is > 0 then fast is great than slow and is bullish
-        # IF EMA fast is < 0 then fast is lower than slow and is bearish
-        # Also used to test crossover, we can see if signal changed from previous candle with .sign
 
         ema_signal = ema_fast - ema_slow
         return ema_signal.iloc[-2], ema_signal.iloc[-3]
@@ -351,10 +352,8 @@ class TechnicalStrategy(Strategy):
         """
 
         ema_signal_latest, ema_signal_previous = self._emas()
-
         # self._add_log(f"ema_signal_latest:  {ema_signal_latest}")
         # self._add_log(f"ema_signal_previous:  {ema_signal_previous}")
-
         if sign(ema_signal_latest) == 0:
             # Same sign meaning it did not had a crossover and exactly same values, this should be rare
             return 0
@@ -366,41 +365,70 @@ class TechnicalStrategy(Strategy):
             # if negative means is bearish, if positive is bullish
             return sign(ema_signal_latest)
 
-    def _price_compare(self, c_result, timeout):
-        try:
-            self._add_log(f"timeout:  {timeout}")
-            current_ema_fast = self._current_ema_fast()
-            self._add_log(f"current_ema_fast:  {current_ema_fast}")
-            current_price = self.candles[-1].close
-            self._add_log(f"current_price:  {current_price}")
+    def _price_compare(self):
 
-            if c_result == 1:
-                # Bullish scenario price <= ema_fast active while until start next candle
-                while timeout > 1000:
-                    timeout = timeout - 1000
-                    time.sleep(1000)
-                    if current_price <= current_ema_fast:
-                        return 1
-                    else:
-                        self._price_compare(c_result, timeout)
+        current_ema_fast = self._current_ema_fast()
+        current_price = self.candles[-1].close
+        timestamp = self.candles[-1].timestamp
 
-            elif c_result == -1:
-                # Bearish scenario price >= ema_fast
-                while timeout > 1000:
-                    timeout = timeout - 1000
-                    time.sleep(1000)
-                    if current_price >= current_ema_fast:
-                        return -1
-                    else:
-                        self._price_compare(c_result, timeout)
+        timestamp_diff = int(time.time() * 1000) - timestamp
+        if timestamp_diff >= 2000:
+            logger.warning("%s %s: %s milliseconds of difference between the current time and the trade time",
+                           self.exchange, self.contract.symbol, timestamp_diff)
 
-            else:
-                return 0
-        except RuntimeError:
-            pass
+        last_candle = self.candles[-1]
+
+        # Same Candle
+
+        if timestamp < last_candle.timestamp + self.tf_equiv:
+
+            last_candle.close = current_price
+            last_candle.volume += self.candles[-1].volume
+
+            if current_price > last_candle.high:
+                last_candle.high = current_price
+            elif current_price < last_candle.low:
+                last_candle.low = current_price
+
+            print("Price: " + str(current_price))
+        #
+        # wait = 3000
+        # time.sleep(3000)
+        # ema_fast, price = self._get_entry_prices()
+        # print(cross_result)
+        # print(f"current_ema_fast:  {ema_fast}")
+        # print(f"current_price:  {price}")
+        #
+        # if cross_result == 1:
+        #     print("Bullish scenario price <= ema_fast active while until start next candle")
+        #
+        #     if timeout > wait:
+        #         print(timeout)
+        #
+        #         self._price_compare(cross_result, timeout - 3000)
+        #         # if current_price <= current_ema_fast:
+        #         #     print("Borat says Great success!")
+        #         #     return 1
+        #         # else:
+        #         #     return self._price_compare(cross_result, timeout)
+        #     else:
+        #         return 0
+        #
+        # elif cross_result == -1:
+        #     print("Bearish scenario price >= ema_fast")
+        #     if timeout > 2000:
+        #         timeout = timeout - 2000
+        #         time.sleep(2)
+        #         current_ema_fast, current_price = self._get_entry_prices()
+        #         if current_price >= current_ema_fast:
+        #             return -1
+        #         # else:
+        #         #     self._price_compare(cross_result, timeout)
+        #
+        # else:
+        return 0
 
     def _check_signal(self):
-
         """
         Compute technical indicators and compare their value to some predefined levels to know whether to go Long,
         Short, or do nothing.
@@ -410,32 +438,23 @@ class TechnicalStrategy(Strategy):
         # Checks for a EMA cross over
         crossover = self._check_crossover()
 
-        # to comment
-        result = self._price_compare(1, self.tf_equiv)
-
+        # result = self.price_compare(crossover, self.tf_equiv, self.cross_over_confirmed)
         ### Adding this to get debug info ###
-        current_balances = self.client.get_balances()
+        # current_balances = self.client.get_balances()
         self._add_log(f"Crossover:  {crossover}")
-        self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
+        # self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
         #####################################
-
+        self.cross_over_confirmed = True
         # if we are inside a short or long, in case of cross we need to market sell previous order, or Stop Loss
         if crossover == 1 or crossover == -1:
-            if crossover == 1:
-                self._add_log("Is bullish need to buy at price <= ema_fast")
-            elif crossover == -1:
-                self._add_log("Is bearish need to buy at price >= ema_fast")
-
-            result = self._price_compare(crossover, self.tf_equiv)
-            self._add_log(f"We finaly have a result: {result}")
-            return result
+            self.cross_over_confirmed = True
+            return 0
         else:
             return 0
 
         # create logic to enter in trade
 
     def check_trade(self, tick_type: str):
-
         """
         To be triggered from the websocket _on_message() methods. Triggered only once per candlestick to avoid
         constantly calculating the indicators. A trade can occur only if the is no open position at the moment.
@@ -443,8 +462,15 @@ class TechnicalStrategy(Strategy):
         :return:
         """
 
+        # if not self.ongoing_position:
         if tick_type == "new_candle" and not self.ongoing_position:
             signal_result = self._check_signal()
+
+            if signal_result in [1, -1]:
+                self._open_position(signal_result)
+
+        elif self.cross_over_confirmed and not self.ongoing_position:
+            signal_result = self._price_compare()
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
