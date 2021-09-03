@@ -537,7 +537,8 @@ class BinanceClient:
         else:
             return None
 
-        trade_size = (balance * balance_pct / 100) / price
+        #trade_size = (balance * balance_pct / 100) / price
+        trade_size = (balance * balance_pct / 100)
 
         trade_size = round(round(trade_size / contract.lot_size) * contract.lot_size, 8)  # Removes extra decimals
 
