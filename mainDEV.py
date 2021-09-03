@@ -34,3 +34,5 @@ if __name__ == '__main__':
 # print(binance.place_order("BTCUSDT", "BUY", 0.01, "LIMIT", 20000, "GTC"))  -> returned order id 2744510528
 # print(binance.get_order_status("BTCUSDT", 2744510528))
 # print(binance.cancel_order("BTCUSDT", 2744510528))
+#self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
+

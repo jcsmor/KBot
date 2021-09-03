@@ -40,6 +40,7 @@ class Strategy:
         self.trades: List[Trade] = []
         self.logs = []
         self.cross_over_confirmed = False
+        self.crossover = 0
 
     def _add_log(self, msg: str):
         logger.info("%s", msg)
@@ -369,64 +370,25 @@ class TechnicalStrategy(Strategy):
 
         current_ema_fast = self._current_ema_fast()
         current_price = self.candles[-1].close
-        timestamp = self.candles[-1].timestamp
 
-        timestamp_diff = int(time.time() * 1000) - timestamp
-        if timestamp_diff >= 2000:
-            logger.warning("%s %s: %s milliseconds of difference between the current time and the trade time",
-                           self.exchange, self.contract.symbol, timestamp_diff)
+        print("current_ema_fast: " + str(current_ema_fast))
+        print("current_price: " + str(current_price))
 
-        last_candle = self.candles[-1]
+        if self.crossover == 1:
+            print("Bullish scenario price <= ema_fast active while until start next candle")
+            if current_price <= current_ema_fast:
+                print("Borat says Great success!")
+                return 1
+            else:
+                return 0
 
-        # Same Candle
-
-        if timestamp < last_candle.timestamp + self.tf_equiv:
-
-            last_candle.close = current_price
-            last_candle.volume += self.candles[-1].volume
-
-            if current_price > last_candle.high:
-                last_candle.high = current_price
-            elif current_price < last_candle.low:
-                last_candle.low = current_price
-
-            print("Price: " + str(current_price))
-        #
-        # wait = 3000
-        # time.sleep(3000)
-        # ema_fast, price = self._get_entry_prices()
-        # print(cross_result)
-        # print(f"current_ema_fast:  {ema_fast}")
-        # print(f"current_price:  {price}")
-        #
-        # if cross_result == 1:
-        #     print("Bullish scenario price <= ema_fast active while until start next candle")
-        #
-        #     if timeout > wait:
-        #         print(timeout)
-        #
-        #         self._price_compare(cross_result, timeout - 3000)
-        #         # if current_price <= current_ema_fast:
-        #         #     print("Borat says Great success!")
-        #         #     return 1
-        #         # else:
-        #         #     return self._price_compare(cross_result, timeout)
-        #     else:
-        #         return 0
-        #
-        # elif cross_result == -1:
-        #     print("Bearish scenario price >= ema_fast")
-        #     if timeout > 2000:
-        #         timeout = timeout - 2000
-        #         time.sleep(2)
-        #         current_ema_fast, current_price = self._get_entry_prices()
-        #         if current_price >= current_ema_fast:
-        #             return -1
-        #         # else:
-        #         #     self._price_compare(cross_result, timeout)
-        #
-        # else:
-        return 0
+        elif self.crossover == -1:
+            print("Bearish scenario price >= ema_fast")
+            if current_price >= current_ema_fast:
+                print("Borat says Great success!")
+                return -1
+            else:
+                return 0
 
     def _check_signal(self):
         """
@@ -436,23 +398,18 @@ class TechnicalStrategy(Strategy):
         """
 
         # Checks for a EMA cross over
-        crossover = self._check_crossover()
+        self.crossover = self._check_crossover()
 
         # result = self.price_compare(crossover, self.tf_equiv, self.cross_over_confirmed)
         ### Adding this to get debug info ###
-        # current_balances = self.client.get_balances()
-        self._add_log(f"Crossover:  {crossover}")
-        # self._add_log(f"Balance:  {current_balances['USDT'].wallet_balance} USDT")
+        self._add_log(f"Crossover:  {self.crossover}")
         #####################################
-        self.cross_over_confirmed = True
         # if we are inside a short or long, in case of cross we need to market sell previous order, or Stop Loss
-        if crossover == 1 or crossover == -1:
+        if self.crossover == 1 or self.crossover == -1:
             self.cross_over_confirmed = True
             return 0
         else:
             return 0
-
-        # create logic to enter in trade
 
     def check_trade(self, tick_type: str):
         """
@@ -463,17 +420,19 @@ class TechnicalStrategy(Strategy):
         """
 
         # if not self.ongoing_position:
-        if tick_type == "new_candle" and not self.ongoing_position:
+        if tick_type == "new_candle" and not self.ongoing_position and not self.cross_over_confirmed:
             signal_result = self._check_signal()
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
 
         elif self.cross_over_confirmed and not self.ongoing_position:
-            signal_result = self._price_compare()
+            signal_result = self._price_compare(self.crossover)
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
+                self.cross_over_confirmed = False
+                self.crossover = False
 
 
 class BreakoutStrategy(Strategy):
