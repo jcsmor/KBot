@@ -400,7 +400,6 @@ class TechnicalStrategy(Strategy):
         # Checks for a EMA cross over
         self.crossover = self._check_crossover()
 
-        # result = self.price_compare(crossover, self.tf_equiv, self.cross_over_confirmed)
         ### Adding this to get debug info ###
         self._add_log(f"Crossover:  {self.crossover}")
         #####################################
@@ -427,7 +426,7 @@ class TechnicalStrategy(Strategy):
                 self._open_position(signal_result)
 
         elif self.cross_over_confirmed and not self.ongoing_position:
-            signal_result = self._price_compare(self.crossover)
+            signal_result = self._price_compare()
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
