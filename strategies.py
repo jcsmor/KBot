@@ -75,9 +75,6 @@ class Strategy:
             elif price < last_candle.low:
                 last_candle.low = price
 
-            # print("Price: " + str(price))
-            # Check Take profit / Stop loss
-
             for trade in self.trades:
                 if trade.status == "open" and trade.entry_price is not None:
                     self._check_tp_sl(trade)
