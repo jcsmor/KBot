@@ -259,7 +259,6 @@ class BinanceClient:
         data['symbol'] = contract.symbol
         data['side'] = side.upper()
         data['quantity'] = round(int(quantity / contract.lot_size) * contract.lot_size, 8)  # int() to round down
-        pprint.pprint(data['quantity'])
         data['type'] = order_type.upper()  # Makes sure the order type is in uppercase
 
         if price is not None:
@@ -537,8 +536,7 @@ class BinanceClient:
         else:
             return None
 
-        #trade_size = (balance * balance_pct / 100) / price
-        trade_size = (balance * balance_pct / 100)
+        trade_size = (balance * balance_pct / 100) / price
 
         trade_size = round(round(trade_size / contract.lot_size) * contract.lot_size, 8)  # Removes extra decimals
 

@@ -39,7 +39,7 @@ class Strategy:
         self.candles: List[Candle] = []
         self.trades: List[Trade] = []
         self.logs = []
-        self.cross_over_confirmed = False
+        self.cross_over_state = False
         self.crossover = 0
 
     def _add_log(self, msg: str):
@@ -350,8 +350,6 @@ class TechnicalStrategy(Strategy):
         """
 
         ema_signal_latest, ema_signal_previous = self._emas()
-        # self._add_log(f"ema_signal_latest:  {ema_signal_latest}")
-        # self._add_log(f"ema_signal_previous:  {ema_signal_previous}")
         if sign(ema_signal_latest) == 0:
             # Same sign meaning it did not had a crossover and exactly same values, this should be rare
             return 0
@@ -373,7 +371,7 @@ class TechnicalStrategy(Strategy):
 
         if self.crossover == 1:
             print("Bullish scenario price <= ema_fast active while until start next candle")
-            if current_price <= current_ema_fast:
+            if current_price < current_ema_fast:
                 print("Borat says Great success!")
                 return 1
             else:
@@ -381,31 +379,30 @@ class TechnicalStrategy(Strategy):
 
         elif self.crossover == -1:
             print("Bearish scenario price >= ema_fast")
-            if current_price >= current_ema_fast:
+            if current_price > current_ema_fast:
                 print("Borat says Great success!")
                 return -1
             else:
                 return 0
 
-    def _check_signal(self):
+    def _get_crossover_state(self) -> bool:
         """
         Compute technical indicators and compare their value to some predefined levels to know whether to go Long,
         Short, or do nothing.
-        :return: 1 for a Long signal, -1 for a Short signal, 0 for no signal
+        Checks for a EMA cross over with current price
+        :return: true when a crossover was confirmed
         """
 
-        # Checks for a EMA cross over
         self.crossover = self._check_crossover()
 
-        ### Adding this to get debug info ###
         self._add_log(f"Crossover:  {self.crossover}")
-        #####################################
-        # if we are inside a short or long, in case of cross we need to market sell previous order, or Stop Loss
+
         if self.crossover == 1 or self.crossover == -1:
-            self.cross_over_confirmed = True
-            return 0
+            self.cross_over_state = True
         else:
-            return 0
+            self.cross_over_state = False
+
+        return self.cross_over_state
 
     def check_trade(self, tick_type: str):
         """
@@ -415,20 +412,36 @@ class TechnicalStrategy(Strategy):
         :return:
         """
 
-        # if not self.ongoing_position:
-        if tick_type == "new_candle" and not self.ongoing_position and not self.cross_over_confirmed:
-            signal_result = self._check_signal()
+        # Waiting for a crossover and not inside a position
+        if tick_type == "new_candle" and not self.ongoing_position and not self.cross_over_state:
+            self._get_crossover_state()
 
-            if signal_result in [1, -1]:
-                self._open_position(signal_result)
-
-        elif self.cross_over_confirmed and not self.ongoing_position:
+        # After crossover state is true will try to enter a position if not inside one already
+        elif self.cross_over_state and not self.ongoing_position:
             signal_result = self._price_compare()
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
-                self.cross_over_confirmed = False
+                self.cross_over_state = False
                 self.crossover = False
+
+        # After entering on a position we detect a new crossover
+        elif self.ongoing_position:
+            signal_result = self._get_crossover_confirmation()
+
+            if tick_type == "new_candle" and self.cross_over_state:
+                self._add_log(
+                    "We are inside a trade but get a new crossover"
+                    " side was detected, so will close current and open new")
+                # cancel current order on market price
+
+                # start opening new
+                signal_result = self._price_compare()
+
+                if signal_result in [1, -1]:
+                    self._open_position(signal_result)
+                    self.cross_over_state = False
+                    self.crossover = False
 
 
 class BreakoutStrategy(Strategy):
