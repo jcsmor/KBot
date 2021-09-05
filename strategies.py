@@ -363,49 +363,56 @@ class TechnicalStrategy(Strategy):
 
     def _price_compare(self):
 
-        current_ema_fast = self._current_ema_fast()
-        current_price = self.candles[-1].close
-
-        print("current_ema_fast: " + str(current_ema_fast))
-        print("current_price: " + str(current_price))
-
-        if self.crossover_direction == 1:
-            print("Bullish scenario price <= ema_fast active while until start next candle")
-            if current_price < current_ema_fast:
-                print("Borat says Great success!")
-                return 1
-            else:
-                return 0
-
-        elif self.crossover_direction == -1:
-            print("Bearish scenario price >= ema_fast")
-            if current_price > current_ema_fast:
-                print("Borat says Great success!")
-                return -1
-            else:
-                return 0
-
-    def _get_crossover_state(self) -> bool:
-        """
-        Compute technical indicators and compare their value to some predefined levels to know whether to go Long,
-        Short, or do nothing.
-        Checks for a EMA cross over with current price
-        :return: true when a crossover was confirmed
-        """
-
-        self.crossover_direction = self._check_crossover()
-
-        self._add_log(f"Crossover:  {self.crossover_direction}")
-
         if self.crossover_direction == 1 or self.crossover_direction == -1:
-            self.cross_over_state = True
+            print("Bullish scenario price <= ema_fast active while until start next candle")
+            print("Borat says Great success!")
+            return self.crossover_direction
         else:
-            self.cross_over_state = False
+            return 0
 
-        return self.cross_over_state
+    # In case want to try EMA6
+    # current_ema_fast = self._current_ema_fast()
+    # current_price = self.candles[-1].close
+    #
+    # print("current_ema_fast: " + str(current_ema_fast))
+    # print("current_price: " + str(current_price))
+    #
+    # if self.crossover_direction == 1:
+    #     print("Bullish scenario price <= ema_fast active while until start next candle")
+    #     if current_price < current_ema_fast:
+    #         print("Borat says Great success!")
+    #         return 1
+    #     else:
+    #         return 0
+    #
+    # elif self.crossover_direction == -1:
+    #     print("Bearish scenario price >= ema_fast")
+    #     if current_price > current_ema_fast:
+    #         print("Borat says Great success!")
+    #         return -1
+    #     else:
+    #         return 0
 
-    def _exit_trade_inside_pos(self, trade: Trade):
+    # def _get_crossover_state(self) -> bool:
+    #     """
+    #     Compute technical indicators and compare their value to some predefined levels to know whether to go Long,
+    #     Short, or do nothing.
+    #     Checks for a EMA cross over with current price
+    #     :return: true when a crossover was confirmed
+    #     """
+    #
+    #     self.crossover_direction = self._check_crossover()
+    #
+    #     self._add_log(f"Crossover:  {self.crossover_direction}")
+    #
+    #     if self.crossover_direction == 1 or self.crossover_direction == -1:
+    #         self.cross_over_state = True
+    #     else:
+    #         self.cross_over_state = False
+    #
+    #     return self.cross_over_state
 
+    def _exit_active_trade(self, trade: Trade):
         self._add_log(f"Existing current trade due to new crossover "
                       f"for '{self.contract.symbol}', '{self.tf}', Entry price was ',{trade.entry_price}")
 
@@ -427,39 +434,31 @@ class TechnicalStrategy(Strategy):
         """
 
         # Waiting for a crossover and not inside a position
-        if tick_type == "new_candle" and not self.ongoing_position and not self.cross_over_state:
-            self._get_crossover_state()
-
-        # After crossover state is true will try to enter a position if not inside one already
-        elif self.cross_over_state and not self.ongoing_position:
-            signal_result = self._price_compare()
+        if tick_type == "new_candle" and not self.ongoing_position:
+            signal_result = self._check_crossover()
+            self._add_log("Detected a new crossover, start trade")
+            self._add_log("signal_result")
+            self._add_log(f"self.ongoing_position: {self.ongoing_position}")
 
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
-                self.cross_over_state = False
-                self.crossover_direction = False
 
-        # After entering on a position we detect a new crossover
-        elif self.ongoing_position:
-            self._get_crossover_state()
+        # Waiting for a crossover already inside a position
+        if tick_type == "new_candle" and self.ongoing_position:
+            signal_result = self._check_crossover()
 
-            if self.cross_over_state:
-                self._add_log(
-                    "We are inside a trade but detected a new crossover, currently only working with 1,"
-                    " bull will need to add parameters to trade object latter"
-                    ", so will close current ap MP and open new")
+            if signal_result in [1, -1]:
+                self._add_log("We are inside a trade, detected new crossover, close current and open new")
+                self._add_log("signal_result")
+                self._add_log(f"self.ongoing_position: {self.ongoing_position}")
                 # cancel current order on market price
                 for trade in self.trades:
                     if trade.status == "open" and trade.entry_price is not None:
-                        self._exit_trade_inside_pos(trade)
-
-                # start opening new
-                signal_result = self._price_compare()
-
-                if signal_result in [1, -1]:
-                    self._open_position(signal_result)
-                    self.cross_over_state = False
-                    self.crossover_direction = False
+                        self._exit_active_trade(trade)
+                        time.sleep(3)
+                        # start opening new after exiting fist
+                        if not self.ongoing_position:
+                            self._open_position(signal_result)
 
 
 class BreakoutStrategy(Strategy):
