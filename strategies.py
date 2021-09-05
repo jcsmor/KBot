@@ -40,7 +40,7 @@ class Strategy:
         self.trades: List[Trade] = []
         self.logs = []
         self.cross_over_state = False
-        self.crossover = 0
+        self.crossover_direction = 0
 
     def _add_log(self, msg: str):
         logger.info("%s", msg)
@@ -369,7 +369,7 @@ class TechnicalStrategy(Strategy):
         print("current_ema_fast: " + str(current_ema_fast))
         print("current_price: " + str(current_price))
 
-        if self.crossover == 1:
+        if self.crossover_direction == 1:
             print("Bullish scenario price <= ema_fast active while until start next candle")
             if current_price < current_ema_fast:
                 print("Borat says Great success!")
@@ -377,7 +377,7 @@ class TechnicalStrategy(Strategy):
             else:
                 return 0
 
-        elif self.crossover == -1:
+        elif self.crossover_direction == -1:
             print("Bearish scenario price >= ema_fast")
             if current_price > current_ema_fast:
                 print("Borat says Great success!")
@@ -393,16 +393,30 @@ class TechnicalStrategy(Strategy):
         :return: true when a crossover was confirmed
         """
 
-        self.crossover = self._check_crossover()
+        self.crossover_direction = self._check_crossover()
 
-        self._add_log(f"Crossover:  {self.crossover}")
+        self._add_log(f"Crossover:  {self.crossover_direction}")
 
-        if self.crossover == 1 or self.crossover == -1:
+        if self.crossover_direction == 1 or self.crossover_direction == -1:
             self.cross_over_state = True
         else:
             self.cross_over_state = False
 
         return self.cross_over_state
+
+    def _exit_trade_inside_pos(self, trade: Trade):
+
+        self._add_log(f"Existing current trade due to new crossover "
+                      f"for '{self.contract.symbol}', '{self.tf}', Entry price was ',{trade.entry_price}")
+
+        order_side = "SELL" if trade.side == "long" else "BUY"
+
+        order_status = self.client.place_order(self.contract, "MARKET", trade.quantity, order_side)
+
+        if order_status is not None:
+            self._add_log(f"Exit order on {self.contract.symbol} {self.tf} placed successfully")
+            trade.status = "closed"
+            self.ongoing_position = False
 
     def check_trade(self, tick_type: str):
         """
@@ -423,17 +437,21 @@ class TechnicalStrategy(Strategy):
             if signal_result in [1, -1]:
                 self._open_position(signal_result)
                 self.cross_over_state = False
-                self.crossover = False
+                self.crossover_direction = False
 
         # After entering on a position we detect a new crossover
         elif self.ongoing_position:
-            signal_result = self._get_crossover_confirmation()
+            self._get_crossover_state()
 
-            if tick_type == "new_candle" and self.cross_over_state:
+            if self.cross_over_state:
                 self._add_log(
-                    "We are inside a trade but get a new crossover"
-                    " side was detected, so will close current and open new")
+                    "We are inside a trade but detected a new crossover, currently only working with 1,"
+                    " bull will need to add parameters to trade object latter"
+                    ", so will close current ap MP and open new")
                 # cancel current order on market price
+                for trade in self.trades:
+                    if trade.status == "open" and trade.entry_price is not None:
+                        self._exit_trade_inside_pos(trade)
 
                 # start opening new
                 signal_result = self._price_compare()
@@ -441,7 +459,7 @@ class TechnicalStrategy(Strategy):
                 if signal_result in [1, -1]:
                     self._open_position(signal_result)
                     self.cross_over_state = False
-                    self.crossover = False
+                    self.crossover_direction = False
 
 
 class BreakoutStrategy(Strategy):
