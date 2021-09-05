@@ -436,26 +436,26 @@ class TechnicalStrategy(Strategy):
         # Waiting for a crossover and not inside a position
         if tick_type == "new_candle" and not self.ongoing_position:
             signal_result = self._check_crossover()
-            self._add_log("Detected a new crossover, start trade")
-            self._add_log("signal_result")
+            self._add_log(f"signal_result {signal_result}")
             self._add_log(f"self.ongoing_position: {self.ongoing_position}")
 
             if signal_result in [1, -1]:
+                self._add_log("Detected a new crossover, start trade")
                 self._open_position(signal_result)
 
         # Waiting for a crossover already inside a position
-        if tick_type == "new_candle" and self.ongoing_position:
+        elif tick_type == "new_candle" and self.ongoing_position:
             signal_result = self._check_crossover()
+            self._add_log(f"signal_result {signal_result}")
+            self._add_log(f"self.ongoing_position: {self.ongoing_position}")
 
             if signal_result in [1, -1]:
                 self._add_log("We are inside a trade, detected new crossover, close current and open new")
-                self._add_log("signal_result")
-                self._add_log(f"self.ongoing_position: {self.ongoing_position}")
                 # cancel current order on market price
                 for trade in self.trades:
                     if trade.status == "open" and trade.entry_price is not None:
                         self._exit_active_trade(trade)
-                        time.sleep(3)
+                        time.sleep(2)
                         # start opening new after exiting fist
                         if not self.ongoing_position:
                             self._open_position(signal_result)
