@@ -160,10 +160,6 @@ class Strategy:
         :return:
         """
 
-        # self.client.place_order(self.contract, "LIMIT", trade.quantity,
-        #                         order_side, trade.entry_price * (1 - self.take_profit1 / 100),
-        #                         'GTC')
-
         print(f"####### _open_tp_limit_position ##########")
 
         position_side = "long" if order_side == "SELL" else "short"
@@ -329,9 +325,6 @@ class Strategy:
         if order_status is not None:
             self._add_log(f"Exit order triggered by {motive} on {self.contract.symbol} {self.tf} placed successfully")
             print(f"exit_trade_cross_sl ORDER STATUS STATUS {order_status.status}")
-            # if order_status.status != "new":
-            #     t = Timer(2.0, lambda: self._check_order_status(order_status.order_id))
-            #     t.start()
             trade.status = "closed"
             self.ongoing_position = False
 
@@ -499,7 +492,6 @@ class TechnicalStrategy(Strategy):
             print(f"###### On going position {self.ongoing_position} ########")
             if signal_result in [1, -1]:
                 print("We are inside a trade, detected new crossover, close current and open new")
-                # cancel current order on market price
                 for trade in self.trades:
                     if trade.status == "open" and trade.entry_price is not None:
                         self._exit_trade_cross_sl(trade, "Crossover detected")
