@@ -39,7 +39,7 @@ class Watchlist(tk.Frame):
 
         self._headers_frame = tk.Frame(self._table_frame, bg=BG_COLOR)
 
-        self._col_width = 13
+        self._col_width = 10
 
         # Creates the headers dynamically
 

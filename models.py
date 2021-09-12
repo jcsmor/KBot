@@ -101,3 +101,4 @@ class Trade:
         self.pnl: float = trade_info['pnl']
         self.quantity = trade_info['quantity']
         self.entry_id = trade_info['entry_id']
+

@@ -241,6 +241,28 @@ class BinanceClient:
 
         return balances
 
+    def get_position_info(self, contract: Contract):
+
+        """
+        Get the current balance of the account, the data is different between Spot and Futures
+        :return:
+        """
+
+        position_info = None
+        data = dict()
+        data['timestamp'] = int(time.time() * 1000)
+        data['signature'] = self._generate_signature(data)
+
+        account_data = self._make_request("GET", "/fapi/v2/positionRisk", data)
+
+        if account_data is not None:
+            if self.futures:
+                for a in account_data:
+                    if a['symbol'] == contract.symbol:
+                        position_info = float(a['positionAmt'])
+
+        return position_info
+
     def place_order(self, contract: Contract, order_type: str, quantity: float, side: str, price=None,
                     tif=None) -> OrderStatus:
 
@@ -309,6 +331,27 @@ class BinanceClient:
             order_status = OrderStatus(order_status, self.platform)
 
         return order_status
+
+    # def cancel_orders(self, contract: Contract) -> OrderStatus:
+    #
+    #     data = dict()
+    #     data['symbol'] = contract.symbol
+    #     data['timestamp'] = int(time.time() * 1000)
+    #     data['signature'] = self._generate_signature(data)
+    #
+    #     if self.futures:
+    #         order_status = self._make_request("DELETE", "/fapi/v1/openOrders", data)
+    #     else:
+    #         order_status = self._make_request("DELETE", "/api/v3/openOrders", data)
+    #
+    #     if order_status is not None:
+    #         if not self.futures:
+    #             # Get the average execution price based on the recent trades
+    #             order_status['avgPrice'] = self._get_execution_price(contract)
+    #         order_status = OrderStatus(order_status, self.platform)
+    #
+    #     self._add_log(f"Cancel_orders on {contract.symbol}")
+    #     return order_status
 
     def _get_execution_price(self, contract: Contract, order_id: int) -> float:
 

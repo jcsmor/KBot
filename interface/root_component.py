@@ -196,7 +196,9 @@ class Root(tk.Tk):
             contract = strat_widgets['contract_var'][b_index].get()
             timeframe = strat_widgets['timeframe_var'][b_index].get()
             balance_pct = strat_widgets['balance_pct'][b_index].get()
-            take_profit = strat_widgets['take_profit'][b_index].get()
+            take_profit1 = strat_widgets['take_profit1'][b_index].get()
+            take_profit2 = strat_widgets['take_profit2'][b_index].get()
+            take_profit3 = strat_widgets['take_profit3'][b_index].get()
             stop_loss = strat_widgets['stop_loss'][b_index].get()
 
             # Extra parameters are all saved in one column as a JSON string because they change based on the strategy
@@ -208,8 +210,9 @@ class Root(tk.Tk):
 
                 extra_params[code_name] = self._strategy_frame.additional_parameters[b_index][code_name]
 
-            strategies.append((strategy_type, contract, timeframe, balance_pct, take_profit, stop_loss,
-                               json.dumps(extra_params),))
+            strategies.append(
+                (strategy_type, contract, timeframe, balance_pct, take_profit1, take_profit2, take_profit3, stop_loss,
+                 json.dumps(extra_params),))
 
         self._strategy_frame.db.save("strategies", strategies)
 
