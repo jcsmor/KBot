@@ -14,7 +14,6 @@ from utils import *
 
 from database import WorkspaceData
 
-
 if typing.TYPE_CHECKING:
     from interface.root_component import Root
 
@@ -33,7 +32,7 @@ class StrategyEditor(tk.Frame):
         self._exchanges = {"Binance": binance}
 
         self._all_contracts = []
-        self._all_timeframes = ["1m", "5m", "15m", "30m", "1h", "4h"]
+        self._all_timeframes = ["1m", "3m", "5m", "15m", "30m", "1h", "4h"]
 
         for exchange, client in self._exchanges.items():
             for symbol, contract in client.contracts.items():
@@ -63,18 +62,20 @@ class StrategyEditor(tk.Frame):
 
         self._base_params = [
             {"code_name": "strategy_type", "widget": tk.OptionMenu, "data_type": str,
-             "values": ["Technical", "Breakout"], "width": 9, "header": "Strategy"},
+             "values": ["Technical", "Breakout"], "width": 8, "header": "Strategy"},
             {"code_name": "contract", "widget": tk.OptionMenu, "data_type": str, "values": self._all_contracts,
-             "width": 7, "header": "Contract"},
+             "width": 6, "header": "Contract"},
             {"code_name": "timeframe", "widget": tk.OptionMenu, "data_type": str, "values": self._all_timeframes,
-             "width": 8, "header": "Timeframe"},
-            {"code_name": "balance_pct", "widget": tk.Entry, "data_type": float, "width": 10, "header": "Balance %"},
-            {"code_name": "take_profit", "widget": tk.Entry, "data_type": float, "width": 7, "header": "TP %"},
-            {"code_name": "stop_loss", "widget": tk.Entry, "data_type": float, "width": 7, "header": "SL %"},
+             "width": 7, "header": "Timeframe"},
+            {"code_name": "balance_pct", "widget": tk.Entry, "data_type": float, "width": 7, "header": "Balance %"},
+            {"code_name": "take_profit1", "widget": tk.Entry, "data_type": float, "width": 5, "header": "TP1 %"},
+            {"code_name": "take_profit2", "widget": tk.Entry, "data_type": float, "width": 5, "header": "TP2 %"},
+            {"code_name": "take_profit3", "widget": tk.Entry, "data_type": float, "width": 5, "header": "TP3 %"},
+            {"code_name": "stop_loss", "widget": tk.Entry, "data_type": float, "width": 5, "header": "SL %"},
             {"code_name": "parameters", "widget": tk.Button, "data_type": float, "text": "Parameters",
              "bg": BG_COLOR_2, "command": self._show_popup, "header": "", "width": 10},
             {"code_name": "activation", "widget": tk.Button, "data_type": float, "text": "OFF",
-             "bg": "darkred", "command": self._switch_strategy, "header": "", "width" : 8},
+             "bg": "darkred", "command": self._switch_strategy, "header": "", "width": 8},
             {"code_name": "delete", "widget": tk.Button, "data_type": float, "text": "X",
              "bg": "darkred", "command": self._delete_row, "header": "", "width": 6},
 
@@ -95,10 +96,10 @@ class StrategyEditor(tk.Frame):
         for idx, h in enumerate(self._base_params):
             header = tk.Label(self._headers_frame, text=h['header'], bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                               width=h['width'], bd=1, relief=tk.FLAT)
-            #for my WINDOWS have this
-            #header.grid(row=0, column=idx, padx=2)
-            #for my MAC have this
-            header.grid(row=0, column=idx, padx=18)
+            # for my WINDOWS have this
+            # header.grid(row=0, column=idx, padx=2)
+            # for my MAC have this
+            header.grid(row=0, column=idx, padx=12)
 
         header = tk.Label(self._headers_frame, text="", bg=BG_COLOR, fg=FG_COLOR, font=GLOBAL_FONT,
                           width=8, bd=1, relief=tk.FLAT)
@@ -123,7 +124,7 @@ class StrategyEditor(tk.Frame):
         """
         Add a new row with widgets defined in the self._base_params list.
         Aligning these widgets with the headers (that are in another frame) can be tricky.
-        List of arguments having an influence on the widgets width: bd, indicatoron, width, font, highlightthickness
+        List of arguments having an influence on the widgets width: bd, indicator, width, font, highlightthickness
         This is because the widgets are of different types (the headers are Labels and the body widgets can be Buttons...
         Mac OSX/Windows also has an influence on the widget style and thus width.
         :return:
@@ -147,14 +148,18 @@ class StrategyEditor(tk.Frame):
                                                                  font=GLOBAL_FONT, bd=1, width=base_param['width'])
 
                 if base_param['data_type'] == int:
-                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_integer, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key',
+                                                                 validatecommand=(self._valid_integer, "%P"))
                 elif base_param['data_type'] == float:
-                    self.body_widgets[code_name][b_index].config(validate='key', validatecommand=(self._valid_float, "%P"))
+                    self.body_widgets[code_name][b_index].config(validate='key',
+                                                                 validatecommand=(self._valid_float, "%P"))
 
             elif base_param['widget'] == tk.Button:
                 self.body_widgets[code_name][b_index] = tk.Button(self._body_frame.sub_frame, text=base_param['text'],
-                                        bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT, width=base_param['width'],
-                                        command=lambda frozen_command=base_param['command']: frozen_command(b_index))
+                                                                  bg=base_param['bg'], fg=FG_COLOR, font=GLOBAL_FONT,
+                                                                  width=base_param['width'],
+                                                                  command=lambda frozen_command=base_param[
+                                                                      'command']: frozen_command(b_index))
             else:
                 continue
 
@@ -214,7 +219,8 @@ class StrategyEditor(tk.Frame):
             temp_label.grid(row=row_nb, column=0)
 
             if param['widget'] == tk.Entry:
-                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER, fg=FG_COLOR,
+                self._extra_input[code_name] = tk.Entry(self._popup_window, bg=BG_COLOR_2, justify=tk.CENTER,
+                                                        fg=FG_COLOR,
                                                         insertbackground=FG_COLOR, highlightthickness=False)
 
                 # Sets the data validation function based on the data_type chosen
@@ -267,7 +273,7 @@ class StrategyEditor(tk.Frame):
         :return:
         """
 
-        for param in ["balance_pct", "take_profit", "stop_loss"]:
+        for param in ["balance_pct", "take_profit1", "take_profit2", "take_profit3", "stop_loss"]:
             if self.body_widgets[param][b_index].get() == "":
                 self.root.logging_frame.add_log(f"Missing {param} parameter")
                 return
@@ -286,17 +292,20 @@ class StrategyEditor(tk.Frame):
         contract = self._exchanges[exchange].contracts[symbol]
 
         balance_pct = float(self.body_widgets['balance_pct'][b_index].get())
-        take_profit = float(self.body_widgets['take_profit'][b_index].get())
+        take_profit1 = float(self.body_widgets['take_profit1'][b_index].get())
+        take_profit2 = float(self.body_widgets['take_profit2'][b_index].get())
+        take_profit3 = float(self.body_widgets['take_profit3'][b_index].get())
         stop_loss = float(self.body_widgets['stop_loss'][b_index].get())
 
         if self.body_widgets['activation'][b_index].cget("text") == "OFF":
 
             if strat_selected == "Technical":
                 new_strategy = TechnicalStrategy(self._exchanges[exchange], contract, exchange, timeframe, balance_pct,
-                                                 take_profit, stop_loss, self.additional_parameters[b_index])
+                                                 take_profit1, take_profit2, take_profit3, stop_loss,
+                                                 self.additional_parameters[b_index])
             elif strat_selected == "Breakout":
                 new_strategy = BreakoutStrategy(self._exchanges[exchange], contract, exchange, timeframe, balance_pct,
-                                                take_profit, stop_loss, self.additional_parameters[b_index])
+                                                take_profit1, stop_loss, self.additional_parameters[b_index])
             else:
                 return
 
@@ -363,6 +372,3 @@ class StrategyEditor(tk.Frame):
             for param, value in extra_params.items():
                 if value is not None:
                     self.additional_parameters[b_index][param] = value
-
-
-

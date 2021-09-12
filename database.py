@@ -10,12 +10,12 @@ class WorkspaceData:
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS watchlist (symbol TEXT, exchange TEXT)")
         self.cursor.execute("CREATE TABLE IF NOT EXISTS strategies (strategy_type TEXT, contract TEXT,"
-                            "timeframe TEXT, balance_pct REAL, take_profit REAL, stop_loss REAL, extra_params TEXT)")
+                            "timeframe TEXT, balance_pct REAL, take_profit1 REAL, take_profit2 REAL,"
+                            " take_profit3 REAL, stop_loss REAL, extra_params TEXT)")
 
         self.conn.commit()  # Saves the changes
 
     def save(self, table: str, data: typing.List[typing.Tuple]):
-
         """
         Erase the previous table content and record new data to it.
         :param table: The table name
@@ -36,7 +36,6 @@ class WorkspaceData:
         self.conn.commit()
 
     def get(self, table: str) -> typing.List[sqlite3.Row]:
-
         """
         Get all the rows recorded for the table.
         :param table: The table name to get the rows from. e.g: strategies, watchlist
