@@ -34,8 +34,8 @@ class Strategy:
         self.take_profit2 = take_profit2
         self.take_profit3 = take_profit3
         self.tp1_quantity = 0.4
-        self.tp2_quantity = 0.2
-        self.tp3_quantity = 0.2
+        self.tp2_quantity = 0.3
+        self.tp3_quantity = 0.3
         self.multiple_tps_placed = False
         self.started = False
 
@@ -271,6 +271,9 @@ class Strategy:
                     order_price1 = round(trade.entry_price * (1 - self.take_profit1 / 100), 8)
                     order_price2 = round(trade.entry_price * (1 - self.take_profit2 / 100), 8)
                     order_price3 = round(trade.entry_price * (1 - self.take_profit3 / 100), 8)
+                    print(f"Quantity 1: {tp_quantity1} with a order price value: {order_price1}")
+                    print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
+                    print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
 
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
@@ -285,6 +288,9 @@ class Strategy:
                     order_price1 = round(trade.entry_price * (1 + self.take_profit1 / 100), 8)
                     order_price2 = round(trade.entry_price * (1 + self.take_profit2 / 100), 8)
                     order_price3 = round(trade.entry_price * (1 + self.take_profit3 / 100), 8)
+                    print(f"Quantity 1: {tp_quantity1} with a order price value: {order_price1}")
+                    print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
+                    print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
 
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
