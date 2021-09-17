@@ -302,7 +302,7 @@ class Strategy:
             if trade.status == "open_tp" and trade.entry_id is not None:
                 cancel_order_status = self.client.cancel_order(self.contract, trade.entry_id)
                 trade.status = "closed"
-                time.sleep(1)
+                time.sleep(0.5)
                 if cancel_order_status is not None:
                     print(f"cancel_order_status {cancel_order_status.status} with id {trade.entry_id}")
 
