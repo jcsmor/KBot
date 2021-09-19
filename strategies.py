@@ -276,7 +276,9 @@ class Strategy:
                     print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
                     print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
+                    time.sleep(0.5)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
+                    time.sleep(0.5)
                     self._open_tp_limit_position(tp_quantity3, order_side, order_price3)
 
                 elif order_side == "SELL":
@@ -291,7 +293,9 @@ class Strategy:
                     print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
                     print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
+                    time.sleep(0.5)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
+                    time.sleep(0.5)
                     self._open_tp_limit_position(tp_quantity3, order_side, order_price3)
 
     def _exit_limit_orders(self):
