@@ -261,20 +261,20 @@ class Strategy:
                 order_side = "SELL" if trade.side == "long" else "BUY"
                 print(f"Trade Entry price {trade.entry_price}")
                 print(f"ORDER SIDE {order_side}")
+                tp_quantity1 = round(trade_size * self.tp1_quantity, 8)
+                tp_quantity2 = round(trade_size * self.tp2_quantity, 8)
+                tp_quantity3 = round(trade_size * self.tp3_quantity, 8)
 
                 if order_side == "BUY":
                     print("Trying to create multiple BUY orders for a short")
                     print(f"trade total size {trade_size}")
-                    tp_quantity1 = round(trade_size * self.tp1_quantity, 8)
-                    tp_quantity2 = round(trade_size * self.tp2_quantity, 8)
-                    tp_quantity3 = round(trade_size * self.tp3_quantity, 8)
+
                     order_price1 = round(trade.entry_price * (1 - self.take_profit1 / 100), 8)
                     order_price2 = round(trade.entry_price * (1 - self.take_profit2 / 100), 8)
                     order_price3 = round(trade.entry_price * (1 - self.take_profit3 / 100), 8)
                     print(f"Quantity 1: {tp_quantity1} with a order price value: {order_price1}")
                     print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
                     print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
-
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
                     self._open_tp_limit_position(tp_quantity3, order_side, order_price3)
@@ -282,16 +282,14 @@ class Strategy:
                 elif order_side == "SELL":
                     print("Trying to create multiple SELL orders for a long")
                     print(f"trade total size {trade_size}")
-                    tp_quantity1 = round(trade_size * self.tp1_quantity, 8)
-                    tp_quantity2 = round(trade_size * self.tp2_quantity, 8)
-                    tp_quantity3 = round(trade_size * self.tp3_quantity, 8)
+
                     order_price1 = round(trade.entry_price * (1 + self.take_profit1 / 100), 8)
                     order_price2 = round(trade.entry_price * (1 + self.take_profit2 / 100), 8)
                     order_price3 = round(trade.entry_price * (1 + self.take_profit3 / 100), 8)
+
                     print(f"Quantity 1: {tp_quantity1} with a order price value: {order_price1}")
                     print(f"Quantity 2: {tp_quantity2} with a order price value: {order_price2}")
                     print(f"Quantity 3: {tp_quantity3} with a order price value: {order_price3}")
-
                     self._open_tp_limit_position(tp_quantity1, order_side, order_price1)
                     self._open_tp_limit_position(tp_quantity2, order_side, order_price2)
                     self._open_tp_limit_position(tp_quantity3, order_side, order_price3)
