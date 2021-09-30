@@ -261,6 +261,7 @@ class Strategy:
                 order_side = "SELL" if trade.side == "long" else "BUY"
                 print(f"Trade Entry price {trade.entry_price}")
                 print(f"ORDER SIDE {order_side}")
+
                 tp_quantity1 = round(trade_size * self.tp1_quantity, 8)
                 tp_quantity2 = round(trade_size * self.tp2_quantity, 8)
                 tp_quantity3 = round(trade_size * self.tp3_quantity, 8)
